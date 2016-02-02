@@ -38,23 +38,21 @@ fi
 # Confirmation before going on
 source ./bak_cfg.sh
 REAL_DIR=$(readlink -f $DIRECTORY)
-echo "$bak_files"
-echo "$bak_db"
+echo "Backup of files : $bak_files"
+echo "Backup of DB    : $bak_db"
 echo
-echo "Before continuing, you MUST remove any original files and/or database content"
 echo "It's recommended to make a different backup of current state of site previously."
 echo
-echo "Are you sure you want to continue? Target directory and DB will be erased (y/n)"
-echo "Target directory: $REAL_DIR"
-echo "Target database: $DB_NAME"
-read confirmation
+echo "Target directory : $REAL_DIR"
+echo "Target database  : $DB_NAME"
+read -p "Are you sure you want to continue? Target DIR and DB will be DELETED (y/n) " confirmation
 if [ "$confirmation" != "y" ] && [ "$confirmation" != "Y" ]; then
   exit
 fi
 
 # We restore the files
 if [ "$bak_files" != "" ]; then
-  echo "Erasing target directory..."
+  echo "Deleting target directory..."
   chmod -R 777 $REAL_DIR
   rm -rf $REAL_DIR
   mkdir -p $DIRECTORY
@@ -66,7 +64,7 @@ fi
 if [ "$bak_db" != "" ]
 then
   # TODO: Test if we can connect to database and exit otherwise
-  echo "Deleting existing tables"
+  echo "Dropping existing tables..."
   # Deleting tables code from http://www.cyberciti.biz/faq/how-do-i-empty-mysql-database/
   MYSQL=$(which mysql)
   AWK=$(which awk)
@@ -78,10 +76,11 @@ then
     $MYSQL --user=$DB_USER --host=$DB_HOST --password=$DB_PASS $DB_NAME -e "drop table $t"
   done
   # TODO: Delete views and stored procedures
-  
-  echo "Restoring database"
+
+  echo "Restoring database..."
   mkdir -p ./temp
   tar -xvf $bak_db --directory ./temp
+  # TODO: Check if extracted sql exists
   mysql --user=$DB_USER --host=$DB_HOST --password=$DB_PASS $DB_NAME < ./temp/$DB_NAME.sql
   rm -rf ./temp
   echo
